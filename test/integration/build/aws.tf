@@ -1182,7 +1182,7 @@ resource "aws_iam_user_group_membership" "aws_iam_user_group_membership_1" {
 resource "aws_iam_group_policy" "iam_group_policy" {
   count = var.aws_enable_creation
   name  = var.aws_iam_group_policy_name
-  group = var.aws_iam_group_name
+  group = aws_iam_group.aws_iam_group_1[0].name
 
   policy = <<EOF
 {
