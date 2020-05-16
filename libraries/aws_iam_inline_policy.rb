@@ -25,7 +25,7 @@ class AwsIamInlinePolicy < AwsResourceBase
   def initialize(opts = {})
     super(opts)
     validate_parameters(require_any_of: %i(role_name user_name group_name), required: %i(policy_name))
-    
+
     @policy_name = opts[:policy_name]
 
     if opts.key?(:role_name)
@@ -35,11 +35,11 @@ class AwsIamInlinePolicy < AwsResourceBase
     elsif opts.key?(:group_name)
       @group_name = opts[:group_name]
       @resp = get_group_policy_by_name(@group_name, @policy_name)
-      @title_str =  "Group: #{@group_name}"
+      @title_str = "Group: #{@group_name}"
     elsif opts.key?(:user_name)
       @user_name = opts[:user_name]
       @resp = get_user_policy_by_name(@user_name, @policy_name)
-      @title_str =  "User: #{@user_name}"
+      @title_str = "User: #{@user_name}"
     end
 
     @policy_document = @resp

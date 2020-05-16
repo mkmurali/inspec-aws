@@ -1,75 +1,52 @@
 require 'aws-sdk-core'
-require 'aws_iam_policy'
+require 'aws_iam_inline_policy'
 require 'helper'
-require_relative 'mock/iam/aws_iam_policy_mock'
+require_relative 'mock/iam/aws_iam_inline_policy_mock'
 
 
-class AwsIamPolicyConstructorTest < Minitest::Test
+class AwsIamInlinePolicyConstructorTest < Minitest::Test
 
   def test_empty_params_not_ok
-    assert_raises(ArgumentError) { AwsIamPolicy.new(client_args: { stub_responses: true }) }
+    assert_raises(ArgumentError) { AwsIamInlinePolicy.new(client_args: { stub_responses: true }) }
   end
 
-  def test_accepts_policy_arn
-    AwsIamPolicy.new(policy_arn: 'policy-arn', client_args: { stub_responses: true })
+  def test_required_any_params_not_ok
+    assert_raises(ArgumentError) { AwsIamInlinePolicy.new(policy_name: 'policy-name', client_args: { stub_responses: true }) }
+  end
+
+  def test_accepts_policy_name_and_role_name
+    AwsIamInlinePolicy.new(policy_name: 'policy-arn', role_name: 'role-name', client_args: { stub_responses: true })
+  end
+
+  def test_accepts_policy_name_and_group_name
+    AwsIamInlinePolicy.new(policy_name: 'policy-arn', group_name: 'group-name', client_args: { stub_responses: true })
+  end
+
+  def test_accepts_policy_name_and_user_name
+    AwsIamInlinePolicy.new(policy_name: 'policy-arn', user_name: 'user-name', client_args: { stub_responses: true })
   end
 
   def test_rejects_unrecognized_params
-    assert_raises(ArgumentError) { AwsIamPolicy.new(rubbish: 9) }
+    assert_raises(ArgumentError) { AwsIamInlinePolicy.new(rubbish: 9) }
   end
 end
 
-class AwsIamPolicyTest < Minitest::Test
+class AwsIamInlinePolicyTest < Minitest::Test
 
   def setup
     # Given
-    @mock = AwsIamPolicyMock.new
+    @mock = AwsIamInlinePolicyMock.new
     @mock_policy = @mock.policy
 
     # When
-    @policy= AwsIamPolicy.new(policy_arn: @mock_policy[:arn],
+    @policy= AwsIamInlinePolicy.new(role_name:  @mock_policy[:role_name],
+                           policy_name: @mock_policy[:policy_name],
                            client_args: { stub_responses: true },
                            stub_data: @mock.stub_data)
   end
 
-  def test_arn
-    assert_equal(@policy.arn, @mock_policy[:arn])
-  end
-
-  def test_attached_username
-    assert @policy.attached_to_user?((@mock_policy[:username]))
-  end
-
-  def test_attached_role
-    assert @policy.attached_to_role?((@mock_policy[:rolename]))
-  end
-
-  def test_attachment_count
-    assert_equal(@policy.attachment_count, @mock_policy[:attachment_count])
-  end
-
-  def test_default_version_id
-    assert_equal(@policy.default_version_id, @mock_policy[:default_version_id])
-  end
-
   def test_policy_name
     assert_equal(@policy.policy_name, @mock_policy[:policy_name])
-  end
-
-  def test_policy_id
-    assert_equal(@policy.policy_id, @mock_policy[:policy_id])
-  end
-
-  def test_policy_attached_groups
-    assert_equal(@policy.attached_groups, @mock_policy[:attached_groups])
-  end
-
-  def test_policy_attached_roles
-    assert_equal(@policy.attached_roles.first, @mock_policy[:attached_roles].first[:role_name])
-  end
-
-  def test_policy_attached_user
-    assert_equal(@policy.attached_users.first, @mock_policy[:attached_users].first[:user_name])
   end
 
   def test_statement_count
@@ -79,10 +56,6 @@ class AwsIamPolicyTest < Minitest::Test
   def test_exists
     assert @policy.exists?
   end
-
-  # def test_statement_contains_resources_existing
-  #   assert @policy.has_statement?(Resource: "*")
-  # end
 
   def test_statement_contains_action
     assert @policy.has_statement?(Action: "ec2:Describe*")
