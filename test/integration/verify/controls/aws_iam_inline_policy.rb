@@ -1,40 +1,57 @@
-title 'Test single AWS Iam Policy'
+title 'Test single AWS Iam Inline Policy'
 
-aws_iam_policy_arn = attribute(:aws_iam_policy_arn, default: '', description: 'The AWS Iam Policy arn.')
-aws_iam_policy_name = attribute(:aws_iam_policy_name, default: '', description: 'The AWS Iam Policy name.')
-aws_iam_attached_policy_name = attribute(:aws_iam_attached_policy_name, default: '', description: 'The AWS Iam Attached Policy name.')
+# IAM User inline policy 
 aws_iam_user_name = attribute(:aws_iam_user_name, default: '', description: 'The Attached AWS Iam Username.')
-aws_iam_role_generic_name = attribute(:aws_iam_role_generic_name, default: '', description: 'The AWS Iam Role.')
+aws_iam_user_policy_name = attribute(:aws_iam_user_policy_name, default: '', description: 'The AWS Iam User Inline Policy.')
 
-control 'aws-iam-policy-1.0' do
+# IAM Role inline policy 
+aws_iam_role_generic_name = attribute(:aws_iam_role_generic_name, default: '', description: 'The AWS Iam Role.')
+aws_iam_role_generic_policy_name = attribute(:aws_iam_role_generic_policy_name, default: '', description: 'The AWS Iam Role Inline Policy.')
+
+# IAM Group inline policy 
+aws_iam_group_name = attribute(:aws_iam_group_name, default: '', description: 'The AWS Iam Group.')
+aws_iam_group_policy_name = attribute(:aws_iam_group_policy_name, default: '', description: 'The AWS Iam Group Inline Policy.')
+
+
+control 'aws-iam-inline-policy-1.0' do
 
   impact 1.0
-  title 'Ensure AWS Iam Policy has the correct properties.'
+  title 'Ensure AWS Iam Inline Policy has the correct properties.'
 
-  describe aws_iam_policy(policy_arn: aws_iam_policy_arn) do
-    it           { should exist }
-    its ('arn')  { should eq aws_iam_policy_arn }
-  end
-
-  describe aws_iam_policy(policy_name: 'DoesNotExist') do
+  # IAM User inline policy 
+  describe aws_iam_inline_policy(user_name: aws_iam_user_name, policy_name: 'DoesNotExist') do
     it           { should_not exist }
-  end
+  end  
 
-  # policy_name param used to maintain consistency with old implementation
-  describe aws_iam_policy(policy_name: aws_iam_policy_name) do
+  describe aws_iam_inline_policy(user_name: aws_iam_user_name, policy_name: aws_iam_user_policy_name) do
     it           { should exist }
-    its ('arn')  { should eq aws_iam_policy_arn }
     it { should_not have_statement('Effect' => 'Allow', 'Resource' => '*', 'Action' => '*') }
     it { should have_statement('Effect' => 'Allow', 'Resource' => '*', 'Action' => 'ec2:Describe*') }
-    it { should have_statement('Effect' => 'Allow', 'Resource' => 'arn:aws:s3:::*', 'NotAction' => 's3:DeleteBucket') }
-    its('statement_count') { should > 1 }
+    its('statement_count') { should > 0 }
   end
 
-  describe aws_iam_policy(policy_name: aws_iam_attached_policy_name) do
-    it { should be_attached_to_user(aws_iam_user_name) }
-    it { should be_attached_to_role(aws_iam_role_generic_name) }
-    it { should_not be_attached_to_user("fake-user") }
-    it { should_not be_attached_to_role("fake-role") }
+  # IAM Role inline policy 
+  describe aws_iam_inline_policy(role_name: aws_iam_role_generic_name, policy_name: 'DoesNotExist') do
+    it           { should_not exist }
+  end  
+
+  describe aws_iam_inline_policy(role_name: aws_iam_role_generic_name, policy_name: aws_iam_role_generic_policy_name) do
+    it           { should exist }
+    it { should_not have_statement('Effect' => 'Allow', 'Resource' => '*', 'Action' => '*') }
+    it { should have_statement('Effect' => 'Allow', 'Resource' => '*', 'Action' => 'ec2:Describe*') }
+    its('statement_count') { should > 0 }
+  end
+
+  # IAM Group inline policy 
+  describe aws_iam_inline_policy(group_name: aws_iam_group_name, policy_name: 'DoesNotExist') do
+    it           { should_not exist }
+  end  
+
+  describe aws_iam_inline_policy(group_name: aws_iam_group_name, policy_name: aws_iam_group_policy_name) do
+    it           { should exist }
+    it { should_not have_statement('Effect' => 'Allow', 'Resource' => '*', 'Action' => '*') }
+    it { should have_statement('Effect' => 'Allow', 'Resource' => '*', 'Action' => 'ec2:Describe*') }
+    its('statement_count') { should > 0 }
   end
 
 end
